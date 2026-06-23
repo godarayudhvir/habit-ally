@@ -4,7 +4,7 @@
 
 **Master your daily routine — privately, beautifully, for free.**
 
-[![Live App](https://img.shields.io/badge/Live%20App-habit--ally.workflare.in-4ade80?style=for-the-badge&logo=googlechrome&logoColor=white)](https://habit-ally.workflare.in/app)
+[![Live App](https://img.shields.io/badge/Live%20App-habit--ally.pages.dev-4ade80?style=for-the-badge&logo=googlechrome&logoColor=white)](https://habit-ally.pages.dev/app)
 [![Made with Alpine.js](https://img.shields.io/badge/Alpine.js-3.x-77c1d2?style=for-the-badge&logo=alpinedotjs&logoColor=white)](https://alpinejs.dev/)
 [![No Backend](https://img.shields.io/badge/Backend-None-slate?style=for-the-badge)](#)
 [![Privacy First](https://img.shields.io/badge/Data-100%25%20Local-6366f1?style=for-the-badge&logo=shieldsdotio&logoColor=white)](#privacy)
@@ -59,7 +59,7 @@ That's it. No login. No cloud. No nonsense.
 
 ### Option 1 — Use the Live App
 
-Just open **[habit-ally.workflare.in/app](https://habit-ally.workflare.in/app)** — no installation needed.
+Just open **[habit-ally.pages.dev/app](https://habit-ally.pages.dev/app)** — no installation needed.
 
 ### Option 2 — Self-host in 30 seconds
 
@@ -250,6 +250,6 @@ See [LICENSE](LICENSE) for details.
 
 Built with ❤️ by [Workflare](https://workflare.in/)
 
-[🌐 Live App](https://habit-ally.workflare.in/app) · [🐛 Report a Bug](https://github.com/workflare-in/habit-ally/issues)
+[🌐 Live App](https://habit-ally.pages.dev/app) · [🐛 Report a Bug](https://github.com/workflare-in/habit-ally/issues)
 
 </div>

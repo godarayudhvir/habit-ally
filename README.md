@@ -4,7 +4,7 @@
 
 **Master your daily routine — privately, beautifully, for free.**
 
-[![Live App](https://img.shields.io/badge/Live%20App-habit--ally.cyberalliance.in-4ade80?style=for-the-badge&logo=googlechrome&logoColor=white)](https://habit-ally.cyberalliance.in/app)
+[![Live App](https://img.shields.io/badge/Live%20App-habit--ally.workflare.in-4ade80?style=for-the-badge&logo=googlechrome&logoColor=white)](https://habit-ally.workflare.in/app)
 [![Made with Alpine.js](https://img.shields.io/badge/Alpine.js-3.x-77c1d2?style=for-the-badge&logo=alpinedotjs&logoColor=white)](https://alpinejs.dev/)
 [![No Backend](https://img.shields.io/badge/Backend-None-slate?style=for-the-badge)](#)
 [![Privacy First](https://img.shields.io/badge/Data-100%25%20Local-6366f1?style=for-the-badge&logo=shieldsdotio&logoColor=white)](#privacy)
@@ -39,6 +39,10 @@ That's it. No login. No cloud. No nonsense.
 | Feature | Description |
 |--------|-------------|
 | 📅 **Monthly Grid View** | See your entire month on one beautiful table |
+| 🌓 **Dark Mode Toggle** | Toggle between light and dark themes with system preference sync |
+| 🏷️ **Color-Coded Habits** | Assign beautiful, curated color categories (Blue, Emerald, Indigo, Amber, Rose) to habits |
+| 📈 **Weight Trend Sparkline** | Dynamic inline SVG sparkline chart visualizing your weight logs over the month |
+| 🔔 **Toast Notifications** | Elegant, non-disruptive, animated custom alert popups |
 | ✅ **One-click Habit Tracking** | Check off habits with a single click or tap |
 | 🔥 **Streak Tracking** | See your current streak, best-ever streak, and total completions per habit |
 | ⚖️ **Weight Logger** | Log your daily weight alongside your habits |
@@ -55,12 +59,12 @@ That's it. No login. No cloud. No nonsense.
 
 ### Option 1 — Use the Live App
 
-Just open **[habit-ally.cyberalliance.in/app](https://habit-ally.cyberalliance.in/app)** — no installation needed.
+Just open **[habit-ally.workflare.in/app](https://habit-ally.workflare.in/app)** — no installation needed.
 
 ### Option 2 — Self-host in 30 seconds
 
 ```bash
-git clone https://github.com/cyberalliance-in/habit-ally.git
+git clone https://github.com/workflare-in/habit-ally.git
 cd habit-ally
 # Open index.html in any browser
 open index.html
@@ -201,7 +205,7 @@ Contributions are welcome! Habit Ally is intentionally simple — please keep PR
 
 ```bash
 # Fork → clone → edit index.html → open in browser to test → PR
-git fork https://github.com/cyberalliance-in/habit-ally
+git fork https://github.com/workflare-in/habit-ally
 git checkout -b feature/your-feature-name
 # make your changes to index.html
 git commit -m "feat: describe your change"
@@ -225,14 +229,14 @@ git push origin feature/your-feature-name
 ## 🗺️ Roadmap
 
 - [ ] Drag-to-reorder habits
-- [ ] Dark mode
-- [ ] Habit categories / colour tagging
-- [ ] 3 day & Weekly view / Mobile responsive
+- [x] Dark mode
+- [x] Habit categories / colour tagging
+- [x] Mobile responsive (Yesterday/Today portrait view + Landscape device rotation support)
 - [ ] Habit notes / journal per day
 - [ ] PWA / installable offline app
 - [ ] React Native cross platform app
 
-Have an idea? [Open an issue](https://github.com/cyberalliance-in/habit-ally/issues) — we'd love to hear it.
+Have an idea? [Open an issue](https://github.com/workflare-in/habit-ally/issues) — we'd love to hear it.
 
 ---
 
@@ -244,8 +248,8 @@ See [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-Built with ❤️ by [Cyber Alliance](https://cyberalliance.in/)
+Built with ❤️ by [Workflare](https://workflare.in/)
 
-[🌐 Live App](https://habit-ally.cyberalliance.in/app) · [🐛 Report a Bug](https://github.com/cyberalliance-in/habit-ally/issues)
+[🌐 Live App](https://habit-ally.workflare.in/app) · [🐛 Report a Bug](https://github.com/workflare-in/habit-ally/issues)
 
 </div>

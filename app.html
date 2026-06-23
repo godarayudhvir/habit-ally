@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,33 +7,55 @@
 <meta name="title" content="Habit Ally | Free Privacy-First Daily Habit Tracker">
 <meta name="description" content="A lightweight, keyboard-accessible habit tracker. Track daily goals, weight, and productivity percentages. 100% private, local storage based.">
 <meta name="keywords" content="habit tracker, productivity tool, daily planner, weight tracker, open source habit tracker, privacy-first tracker">
-<link rel="canonical" href="https://habit-ally.cyberalliance.in/app">
+<link rel="canonical" href="https://habit-ally.workflare.in/app">
 
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://habit-ally.cyberalliance.in/app">
+<meta property="og:url" content="https://habit-ally.workflare.in/app">
 <meta property="og:title" content="Habit Ally - Master Your Daily Routine">
 <meta property="og:description" content="Track your habits and weight with this sleek, privacy-focused dashboard. No login required.">
-<meta property="og:image" content="https://habit-ally.cyberalliance.in/preview-thumbnail.jpg">
+<meta property="og:image" content="https://habit-ally.workflare.in/preview-thumbnail.jpg">
 
 <meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://habit-ally.cyberalliance.in/app">
+<meta property="twitter:url" content="https://habit-ally.workflare.in/app">
 <meta property="twitter:title" content="Habit Ally">
 <meta property="twitter:description" content="Modern habit tracking with zero data tracking. Just you and your goals.">
-<meta property="twitter:image" content="https://habit-ally.cyberalliance.in/preview-thumbnail.jpg">
+<meta property="twitter:image" content="https://habit-ally.workflare.in/preview-thumbnail.jpg">
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            light: '#6d4aff',
+            dark: '#4d34b3'
+          }
+        }
+      }
+    }
+  }
+</script>
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <style>
   [x-cloak] { display: none !important; }
 
   .cell-border { border: 1px solid #e2e8f0; }
+  .dark .cell-border { border: 1px solid #334155; }
+
   .sticky-col {
     position: sticky; left: 0;
     background: white; z-index: 10;
     border-right: 2px solid #e2e8f0;
   }
+  .dark .sticky-col {
+    background: #0f172a;
+    border-right: 2px solid #334155;
+  }
   tr:hover .sticky-col { background: #f8fafc; }
+  .dark tr:hover .sticky-col { background: #1e293b; }
 
   input[type="checkbox"] {
     width: 1.4rem; height: 1.4rem;
@@ -42,12 +64,13 @@
   }
   input[type="checkbox"]:active { transform: scale(0.9); }
 
-  .progress-bar { transition: width 0.5s ease-out; }
+  .progress-bar { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
   /* Modal backdrop */
   .modal-backdrop {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
     z-index: 50;
     display: flex; align-items: center; justify-content: center;
     padding: 1rem;
@@ -58,14 +81,26 @@
     padding: 1.5rem;
     width: 100%;
     max-width: 420px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .dark .modal-box {
+    background: #1e293b;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
   }
 
   /* Streak badge */
   .streak-fire { font-size: 0.75rem; }
 
   /* Smooth row hover */
-  tbody tr { transition: background 0.1s; }
+  tbody tr { transition: background-color 0.15s; }
+  
+  /* Scrollbar customization */
+  ::-webkit-scrollbar { height: 8px; width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  .dark ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  .dark ::-webkit-scrollbar-thumb { background: #475569; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
 <script type="application/ld+json">
@@ -73,11 +108,11 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Habit Ally",
-  "url": "https://habit-ally.cyberalliance.in/app",
+  "url": "https://habit-ally.workflare.in/app",
   "author": {
     "@type": "Organization",
-    "name": "Cyber Alliance",
-    "url": "https://cyberalliance.in/"
+    "name": "Workflare",
+    "url": "https://workflare.in/"
   },
   "operatingSystem": "Web",
   "applicationCategory": "ProductivityApplication",
@@ -91,10 +126,32 @@
 </script>
 </head>
 
-<body class="bg-slate-50 min-h-screen font-sans text-slate-900"
+<body class="bg-slate-50 dark:bg-slate-900 min-h-screen font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200"
       x-data="tracker()"
       x-init="init()"
       x-cloak>
+
+  <!-- ═══════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+  ═══════════════════════════════════════════════ -->
+  <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full">
+    <template x-for="toast in toasts" :key="toast.id">
+      <div class="pointer-events-auto px-4 py-3 rounded-xl shadow-xl text-white text-sm font-semibold flex items-center justify-between gap-3 border transition duration-300"
+           :class="{
+             'bg-emerald-600 border-emerald-500 dark:bg-emerald-700': toast.type === 'success',
+             'bg-blue-600 border-blue-500 dark:bg-blue-700': toast.type === 'info',
+             'bg-amber-500 border-amber-400 dark:bg-amber-600': toast.type === 'warning',
+             'bg-rose-600 border-rose-500 dark:bg-rose-700': toast.type === 'error'
+           }"
+           x-transition>
+        <div class="flex items-center gap-2">
+          <span class="text-base" x-text="toast.type === 'success' ? '✓' : toast.type === 'error' ? '✗' : 'ℹ'"></span>
+          <span x-text="toast.message"></span>
+        </div>
+        <button @click="toasts = toasts.filter(t => t.id !== toast.id)" class="text-white/80 hover:text-white ml-2 text-xs">×</button>
+      </div>
+    </template>
+  </div>
 
   <!-- ═══════════════════════════════════════════════
        MODALS
@@ -102,34 +159,59 @@
 
   <!-- Add Habit Modal -->
   <div x-show="modal.type === 'addHabit'" class="modal-backdrop" @click.self="closeModal()">
-    <div class="modal-box" @keydown.escape.window="closeModal()">
-      <h2 class="text-lg font-bold text-slate-800 mb-1">Add New Habit</h2>
-      <p class="text-xs text-slate-500 mb-4">Give your habit a short, clear name.</p>
+    <div class="modal-box border border-slate-200 dark:border-slate-800" @keydown.escape.window="closeModal()">
+      <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">Add New Habit</h2>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Choose a clear name and a visual theme color.</p>
+      
       <input
         type="text"
         x-model="modal.input"
         @keydown.enter="confirmModal()"
         x-ref="habitInput"
         placeholder="e.g. Morning walk"
-        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-1"
+        class="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 mb-4 text-slate-900 dark:text-slate-100"
         maxlength="60">
-      <p class="text-xs text-red-500 mb-4 min-h-[1rem]" x-text="modal.error"></p>
+
+      <!-- Habit Color Tag Selection -->
+      <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">Theme Color</label>
+      <div class="flex gap-2 mb-2">
+        <template x-for="color in ['blue', 'emerald', 'indigo', 'amber', 'rose']">
+          <button 
+            @click="modal.color = color"
+            type="button"
+            class="w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center"
+            :class="{
+              'border-slate-900 dark:border-white scale-110': modal.color === color,
+              'border-transparent hover:scale-105': modal.color !== color,
+              'bg-blue-500': color === 'blue',
+              'bg-emerald-500': color === 'emerald',
+              'bg-indigo-500': color === 'indigo',
+              'bg-amber-500': color === 'amber',
+              'bg-rose-500': color === 'rose'
+            }"
+            :aria-label="'Select ' + color + ' color'">
+            <span x-show="modal.color === color" class="text-white text-xs font-bold">✓</span>
+          </button>
+        </template>
+      </div>
+      
+      <p class="text-xs text-red-500 dark:text-red-400 mb-4 min-h-[1rem]" x-text="modal.error"></p>
       <div class="flex gap-2 justify-end">
-        <button @click="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 transition">Cancel</button>
-        <button @click="confirmModal()" class="px-4 py-2 text-sm rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition font-semibold">Add Habit</button>
+        <button @click="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition">Cancel</button>
+        <button @click="confirmModal()" class="px-4 py-2 text-sm rounded-lg bg-slate-800 hover:bg-slate-700 dark:bg-slate-200 dark:hover:bg-slate-100 text-white dark:text-slate-950 transition font-semibold">Add Habit</button>
       </div>
     </div>
   </div>
 
   <!-- Delete Habit Modal -->
   <div x-show="modal.type === 'deleteHabit'" class="modal-backdrop" @click.self="closeModal()">
-    <div class="modal-box" @keydown.escape.window="closeModal()">
-      <h2 class="text-lg font-bold text-slate-800 mb-1">Delete Habit</h2>
-      <p class="text-sm text-slate-600 mb-5">
-        Permanently delete <strong x-text="'&quot;' + modal.habitName + '&quot;'"></strong> and all its history? This cannot be undone.
+    <div class="modal-box border border-slate-200 dark:border-slate-800" @keydown.escape.window="closeModal()">
+      <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">Delete Habit</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-300 mb-5">
+        Permanently delete <strong class="text-slate-900 dark:text-white" x-text="'&quot;' + modal.habitName + '&quot;'"></strong> and all its history? This cannot be undone.
       </p>
       <div class="flex gap-2 justify-end">
-        <button @click="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 transition">Cancel</button>
+        <button @click="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition">Cancel</button>
         <button @click="confirmModal()" class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-semibold">Delete</button>
       </div>
     </div>
@@ -137,13 +219,13 @@
 
   <!-- Reset Data Modal -->
   <div x-show="modal.type === 'reset'" class="modal-backdrop" @click.self="closeModal()">
-    <div class="modal-box" @keydown.escape.window="closeModal()">
-      <h2 class="text-lg font-bold text-slate-800 mb-1">Reset Everything</h2>
-      <p class="text-sm text-slate-600 mb-5">
-        This will permanently delete <strong>all habits, history, and weight data</strong>. Export a backup first if you want to keep your data.
+    <div class="modal-box border border-slate-200 dark:border-slate-800" @keydown.escape.window="closeModal()">
+      <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">Reset Everything</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-300 mb-5">
+        This will permanently delete <strong>all habits, color tags, history, and weight data</strong>. Export a backup first if you want to keep your data.
       </p>
       <div class="flex gap-2 justify-end">
-        <button @click="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 transition">Cancel</button>
+        <button @click="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition">Cancel</button>
         <button @click="confirmModal()" class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-semibold">Reset All Data</button>
       </div>
     </div>
@@ -152,30 +234,38 @@
   <!-- ═══════════════════════════════════════════════
        HEADER
   ═══════════════════════════════════════════════ -->
-  <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-20 shadow-sm">
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-20 shadow-sm transition-colors duration-200">
     <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
 
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <span class="text-blue-600">📊</span> Habit Ally
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <span class="text-emerald-500">🌱</span> Habit Ally
         </h1>
-        <p class="text-xs text-slate-500 font-medium uppercase tracking-wider" x-text="currentMonthName"></p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider" x-text="currentMonthName"></p>
       </div>
 
-      <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
-        <button @click="changeMonth(-1)" class="p-2 hover:bg-white rounded-md shadow-sm transition" aria-label="Previous month">←</button>
-        <span class="px-4 font-bold text-sm" x-text="viewDate.getFullYear() + ' / ' + String(viewDate.getMonth() + 1).padStart(2,'0')"></span>
-        <button @click="changeMonth(1)" class="p-2 hover:bg-white rounded-md shadow-sm transition" aria-label="Next month">→</button>
+      <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+        <button @click="changeMonth(-1)" class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-md shadow-sm transition text-slate-700 dark:text-slate-200" aria-label="Previous month">←</button>
+        <span class="px-4 font-bold text-sm text-slate-800 dark:text-slate-200" x-text="viewDate.getFullYear() + ' / ' + String(viewDate.getMonth() + 1).padStart(2,'0')"></span>
+        <button @click="changeMonth(1)" class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-md shadow-sm transition text-slate-700 dark:text-slate-200" aria-label="Next month">→</button>
       </div>
 
-      <div class="flex flex-wrap gap-2">
-        <button @click="openAddHabitModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 transition">+ Add Habit</button>
-        <button @click="exportData()" class="bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 transition">Export</button>
-        <label class="bg-green-50 text-green-600 border border-green-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-100 transition cursor-pointer">
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Theme Toggle Button -->
+        <button @click="toggleDarkMode()" 
+                class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-750 transition"
+                aria-label="Toggle Dark Mode">
+          <span x-show="!isDarkMode" class="text-lg">🌙</span>
+          <span x-show="isDarkMode" class="text-lg">☀️</span>
+        </button>
+
+        <button @click="openAddHabitModal()" class="bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-950 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-700 dark:hover:bg-slate-100 transition shadow-sm">+ Add Habit</button>
+        <button @click="exportData()" class="bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/50 px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">Export</button>
+        <label class="bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50 px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition cursor-pointer">
           Import <input type="file" class="hidden" @change="importData($event)" accept=".json">
         </label>
-        <button @click="openResetModal()" class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition">Reset</button>
-      <a href="https://habit-ally.cyberalliance.in/" target="_blank" rel="noopener noreferrer" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 transition"> Learn More</a>
+        <button @click="openResetModal()" class="bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/50 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/40 transition">Reset</button>
+        <a href="index.html" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"> Landing Page</a>
       </div>
     </div>
   </header>
@@ -188,60 +278,85 @@
     <!-- Stats cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <p class="text-slate-500 text-xs font-bold uppercase mb-1">Monthly Average</p>
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-1">Monthly Average</p>
         <div class="flex items-end gap-2">
-          <span class="text-3xl font-black text-blue-600" x-text="monthlyAverage + '%'"></span>
-          <div class="flex-1 h-2 bg-slate-100 rounded-full mb-2 overflow-hidden">
-            <div class="progress-bar h-full bg-blue-500" :style="'width:' + monthlyAverage + '%'"></div>
+          <span class="text-3xl font-black text-blue-600 dark:text-blue-400" x-text="monthlyAverage + '%'"></span>
+          <div class="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full mb-2 overflow-hidden">
+            <div class="progress-bar h-full bg-blue-500 dark:bg-blue-400" :style="'width:' + monthlyAverage + '%'"></div>
           </div>
         </div>
       </div>
 
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
-        <p class="text-slate-500 text-xs font-bold uppercase mb-1">Total Habits</p>
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 text-center flex flex-col justify-center">
+        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-1">Total Active Habits</p>
         <span class="text-3xl font-black" x-text="habits.length"></span>
       </div>
 
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <p class="text-slate-500 text-xs font-bold uppercase mb-1">Best Streak Today</p>
-        <div class="flex items-center gap-2">
-          <span class="text-3xl font-black text-amber-500" x-text="topStreak.days"></span>
-          <div class="text-xs text-slate-500" x-show="topStreak.days > 0">
-            <span class="font-semibold text-slate-700" x-text="topStreak.habit"></span><br>
-            <span>day streak 🔥</span>
-          </div>
-          <span class="text-xs text-slate-400" x-show="topStreak.days === 0">No streaks yet</span>
+      <!-- Sparkline and Trend Card -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-1">Weight Trend (kg)</p>
+        <div class="flex items-center justify-between gap-2 h-10">
+          <template x-if="weightTrend.hasData">
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-black text-slate-800 dark:text-white" x-text="weightTrend.latest + 'kg'"></span>
+              <span class="text-[10px] text-slate-500" x-text="'(range: ' + weightTrend.min + '-' + weightTrend.max + ')'"></span>
+            </div>
+          </template>
+          <template x-if="!weightTrend.hasData">
+            <span class="text-xs text-slate-400">Log weights to see trend chart</span>
+          </template>
+          
+          <!-- Dynamic SVG Sparkline -->
+          <template x-if="weightTrend.hasData && weightTrend.points.length >= 2">
+            <svg class="w-32 h-8 overflow-visible" viewBox="0 0 160 40">
+              <defs>
+                <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.3"></stop>
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0"></stop>
+                </linearGradient>
+              </defs>
+              <path :d="weightTrend.fillPath" fill="url(#sparklineGrad)"></path>
+              <path :d="weightTrend.path" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              <!-- Draw active endpoints -->
+              <circle :cx="weightTrend.points[weightTrend.points.length-1].x" :cy="weightTrend.points[weightTrend.points.length-1].y" r="3.5" fill="#10b981"></circle>
+            </svg>
+          </template>
         </div>
       </div>
 
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <p class="text-slate-500 text-xs font-bold uppercase mb-1">Status Legend</p>
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+        <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mb-1">Status Legend</p>
         <div class="flex justify-between text-xl">
-          <span>💨 <small class="text-[10px] block">0%</small></span>
-          <span>🌱 <small class="text-[10px] block">&lt;40%</small></span>
-          <span>🌳 <small class="text-[10px] block">&lt;80%</small></span>
-          <span>🌲 <small class="text-[10px] block">&lt;95%</small></span>
-          <span>🍎 <small class="text-[10px] block">100%</small></span>
+          <span>💨 <small class="text-[10px] dark:text-slate-400 block text-center">0%</small></span>
+          <span>🌱 <small class="text-[10px] dark:text-slate-400 block text-center">&lt;40%</small></span>
+          <span>🌳 <small class="text-[10px] dark:text-slate-400 block text-center">&lt;80%</small></span>
+          <span>🌲 <small class="text-[10px] dark:text-slate-400 block text-center">&lt;95%</small></span>
+          <span>🍎 <small class="text-[10px] dark:text-slate-400 block text-center">100%</small></span>
         </div>
       </div>
     </div>
 
+    <!-- Orientation Hint for Mobile Portrait -->
+    <div class="block landscape:hidden md:hidden text-center text-xs text-slate-500 dark:text-slate-400 mb-3 bg-slate-100 dark:bg-slate-800/40 py-2 px-3 rounded-lg border border-slate-200/50 dark:border-slate-800/50">
+      <span>💡 Rotate your device to landscape mode to view the full month grid.</span>
+    </div>
+
     <!-- Grid table -->
-    <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-slate-300">
+    <div class="bg-white dark:bg-slate-850 rounded-xl shadow-xl overflow-hidden border border-slate-300 dark:border-slate-800">
       <div class="overflow-x-auto">
-        <table class="w-full border-collapse table-fixed min-w-[1200px]">
+        <table class="w-full border-collapse table-fixed min-w-0 landscape:min-w-[1200px] md:min-w-[1200px]">
 
           <thead>
             <!-- Day headers -->
-            <tr class="bg-slate-50">
-              <th class="sticky-col w-72 p-3 text-left border-b-2 border-slate-200 font-bold text-slate-600">
+            <tr class="bg-slate-50 dark:bg-slate-900/50">
+              <th class="sticky-col w-40 md:w-72 p-3 text-left border-b-2 border-slate-200 dark:border-slate-800 font-bold text-slate-600 dark:text-slate-300">
                 Metric / Date
               </th>
               <template x-for="day in daysInMonth" :key="'h-' + day">
-                <th class="cell-border p-2 text-center border-b-2 border-slate-200 w-12"
-                    :class="isToday(day) ? 'bg-blue-50' : ''">
-                  <span class="block text-[10px] uppercase text-slate-400" x-text="getDayName(day)"></span>
+                <th class="cell-border p-2 text-center border-b-2 border-slate-200 dark:border-slate-800 w-12"
+                    :class="(isToday(day) ? 'bg-blue-50 dark:bg-blue-950/40 ' : '') + getDayDisplayClass(day)">
+                  <span class="block text-[10px] uppercase text-slate-400 dark:text-slate-500" x-text="getDayName(day)"></span>
                   <span class="text-lg font-bold" x-text="day"></span>
                   <div class="text-xl mt-1" x-text="getLegendIcon(day)"></div>
                 </th>
@@ -249,12 +364,12 @@
             </tr>
 
             <!-- Weight row -->
-            <tr>
-              <th class="sticky-col p-3 text-left border-b bg-slate-50 italic text-slate-500 font-medium">
+            <tr class="dark:bg-slate-900/10">
+              <th class="sticky-col p-3 text-left border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 italic text-slate-500 dark:text-slate-400 font-medium">
                 Weight (kg)
               </th>
               <template x-for="day in daysInMonth" :key="'w-' + day">
-                <td class="cell-border p-0" :class="isToday(day) ? 'bg-blue-50' : ''">
+                <td class="cell-border p-0" :class="(isToday(day) ? 'bg-blue-50 dark:bg-blue-950/40 ' : '') + getDayDisplayClass(day)">
                   <input
                     type="number"
                     step="0.1"
@@ -262,7 +377,7 @@
                     max="500"
                     :value="data.weights[getDateKey(day)] || ''"
                     @change="setWeight(day, $event.target.value)"
-                    class="w-full h-12 bg-transparent text-center focus:bg-white focus:ring-2 ring-inset ring-blue-500 outline-none text-sm"
+                    class="w-full h-12 bg-transparent text-center focus:bg-white dark:focus:bg-slate-800 focus:ring-2 ring-inset ring-blue-500 outline-none text-sm text-slate-900 dark:text-white"
                     :aria-label="'Weight on day ' + day">
                 </td>
               </template>
@@ -271,21 +386,31 @@
 
           <tbody>
             <template x-for="(habit, index) in habits" :key="'r-' + habit">
-              <tr class="hover:bg-slate-50 transition-colors">
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
 
                 <!-- Habit label + streaks -->
-                <td class="sticky-col p-3 border-b group">
+                <td class="sticky-col p-3 border-b border-slate-200 dark:border-slate-800 group">
                   <div class="flex items-center justify-between gap-2">
                     <div class="flex flex-col min-w-0">
-                      <span class="font-medium text-slate-700 truncate" x-text="habit"></span>
+                      <span class="font-semibold text-slate-700 dark:text-slate-200 truncate flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full inline-block"
+                              :class="{
+                                'bg-blue-500': getHabitColor(habit) === 'blue',
+                                'bg-emerald-500': getHabitColor(habit) === 'emerald',
+                                'bg-indigo-500': getHabitColor(habit) === 'indigo',
+                                'bg-amber-500': getHabitColor(habit) === 'amber',
+                                'bg-rose-500': getHabitColor(habit) === 'rose'
+                              }"></span>
+                        <span x-text="habit"></span>
+                      </span>
                       <div class="flex items-center gap-2 mt-0.5">
                         <template x-if="getStreak(habit).current > 0">
-                          <span class="streak-fire text-amber-600 font-semibold">
+                          <span class="streak-fire text-amber-600 dark:text-amber-500 font-bold">
                             🔥 <span x-text="getStreak(habit).current"></span>d
                           </span>
                         </template>
                         <template x-if="getStreak(habit).best > 0">
-                          <span class="streak-fire text-slate-400">
+                          <span class="streak-fire text-slate-400 dark:text-slate-500">
                             best: <span x-text="getStreak(habit).best"></span>d
                           </span>
                         </template>
@@ -293,22 +418,23 @@
                     </div>
                     <button
                       @click="openDeleteModal(index)"
-                      class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 px-2 py-1 rounded transition flex-shrink-0"
+                      class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 dark:hover:text-red-400 px-2 py-1 rounded transition flex-shrink-0"
                       :aria-label="'Delete habit ' + habit">×</button>
                   </div>
                 </td>
 
-                <!-- Checkboxes -->
+                <!-- Checkboxes with habit-specific color tagging -->
                 <template x-for="day in daysInMonth" :key="'c-' + habit + '-' + day">
                   <td class="cell-border text-center p-0 h-14"
-                      :class="isToday(day) ? 'bg-blue-50/50' : ''">
+                      :class="(isToday(day) ? 'bg-blue-50/50 dark:bg-blue-950/20 ' : '') + getDayDisplayClass(day)">
                     <label class="flex items-center justify-center w-full h-full cursor-pointer"
                            :aria-label="habit + ' on day ' + day">
                       <input
                         type="checkbox"
                         :checked="isChecked(habit, day)"
                         @change="toggleHabit(habit, day)"
-                        class="accent-blue-600 rounded">
+                        class="rounded"
+                        :class="getHabitColorClass(habit).accent">
                     </label>
                   </td>
                 </template>
@@ -319,11 +445,11 @@
 
           <!-- Daily score footer -->
           <tfoot>
-            <tr class="bg-slate-50 font-bold">
-              <td class="sticky-col p-3 border-t-2 border-slate-200 text-slate-700">Daily Score %</td>
+            <tr class="bg-slate-50 dark:bg-slate-900/50 font-bold">
+              <td class="sticky-col p-3 border-t-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">Daily Score %</td>
               <template x-for="day in daysInMonth" :key="'s-' + day">
-                <td class="cell-border text-center p-2 border-t-2 border-slate-200 text-sm"
-                    :class="getDailyPct(day) > 79 ? 'text-green-600' : 'text-slate-600'"
+                <td class="cell-border text-center p-2 border-t-2 border-slate-200 dark:border-slate-800 text-sm"
+                    :class="(getDailyPct(day) > 79 ? 'text-emerald-600 dark:text-emerald-400 ' : 'text-slate-600 dark:text-slate-400 ') + getDayDisplayClass(day)"
                     x-text="getDailyPct(day) + '%'">
                 </td>
               </template>
@@ -334,26 +460,36 @@
     </div>
 
     <!-- Per-habit streak table -->
-    <div class="mt-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden" x-show="habits.length > 0">
-      <div class="px-5 py-4 border-b border-slate-100">
-        <h2 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Streak Overview</h2>
+    <div class="mt-8 bg-white dark:bg-slate-850 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden" x-show="habits.length > 0">
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+        <h2 class="font-bold text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider">Streak Overview</h2>
       </div>
-      <div class="divide-y divide-slate-100">
+      <div class="divide-y divide-slate-100 dark:divide-slate-800">
         <template x-for="habit in habits" :key="'st-' + habit">
-          <div class="flex items-center justify-between px-5 py-3">
-            <span class="text-sm font-medium text-slate-700 flex-1 truncate" x-text="habit"></span>
+          <div class="flex items-center justify-between px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+            <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 flex-1 truncate flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full inline-block"
+                    :class="{
+                      'bg-blue-500': getHabitColor(habit) === 'blue',
+                      'bg-emerald-500': getHabitColor(habit) === 'emerald',
+                      'bg-indigo-500': getHabitColor(habit) === 'indigo',
+                      'bg-amber-500': getHabitColor(habit) === 'amber',
+                      'bg-rose-500': getHabitColor(habit) === 'rose'
+                    }"></span>
+              <span x-text="habit"></span>
+            </span>
             <div class="flex items-center gap-6 text-sm flex-shrink-0">
               <div class="text-center">
                 <div class="font-black text-amber-500 text-lg leading-none" x-text="getStreak(habit).current"></div>
-                <div class="text-[10px] text-slate-400 uppercase">Current</div>
+                <div class="text-[10px] text-slate-400 uppercase mt-0.5">Current</div>
               </div>
               <div class="text-center">
-                <div class="font-black text-slate-600 text-lg leading-none" x-text="getStreak(habit).best"></div>
-                <div class="text-[10px] text-slate-400 uppercase">Best</div>
+                <div class="font-black text-slate-600 dark:text-slate-400 text-lg leading-none" x-text="getStreak(habit).best"></div>
+                <div class="text-[10px] text-slate-400 uppercase mt-0.5">Best</div>
               </div>
               <div class="text-center">
-                <div class="font-black text-blue-500 text-lg leading-none" x-text="getStreak(habit).total"></div>
-                <div class="text-[10px] text-slate-400 uppercase">Total ✓</div>
+                <div class="font-black text-blue-500 dark:text-blue-400 text-lg leading-none" x-text="getStreak(habit).total"></div>
+                <div class="text-[10px] text-slate-400 uppercase mt-0.5">Total ✓</div>
               </div>
             </div>
           </div>
@@ -366,24 +502,25 @@
   <!-- ═══════════════════════════════════════════════
        FOOTER / SEO SECTION
   ═══════════════════════════════════════════════ -->
-  <section class="max-w-[1600px] mx-auto mt-12 p-6 text-slate-600 border-t border-slate-200">
-    <h2 class="text-xl font-bold mb-4 text-slate-800">Why use Habit Ally?</h2>
+  <section class="max-w-[1600px] mx-auto mt-12 p-6 text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800">
+    <h2 class="text-xl font-bold mb-4 text-slate-800 dark:text-white">Why use Habit Ally?</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div>
-        <h3 class="font-bold text-slate-700">Privacy First</h3>
+        <h3 class="font-bold text-slate-700 dark:text-slate-350">Privacy First</h3>
         <p class="text-sm">Your data never leaves your device. We use <strong>localStorage</strong> technology to keep your habits 100% private and offline-capable.</p>
       </div>
       <div>
-        <h3 class="font-bold text-slate-700">Streak Tracking</h3>
+        <h3 class="font-bold text-slate-700 dark:text-slate-350">Streak Tracking</h3>
         <p class="text-sm">See your current and best streaks for every habit at a glance. Stay motivated by watching your streaks grow day by day.</p>
       </div>
       <div>
-        <h3 class="font-bold text-slate-700">Export & Backup</h3>
+        <h3 class="font-bold text-slate-700 dark:text-slate-350">Export & Backup</h3>
         <p class="text-sm">Download your data as a JSON file anytime to keep a permanent backup of your productivity journey.</p>
       </div>
     </div>
     <p class="text-xs text-slate-400 mt-8">
-      Habit Ally is a product by <a href="https://cyberalliance.in/" class="underline hover:text-slate-600" target="_blank" rel="noopener">Cyber Alliance</a>.
+      Habit Ally is a product by <a href="https://workflare.in/" class="underline hover:text-slate-600 dark:hover:text-slate-300" target="_blank" rel="noopener">Workflare</a>.
+      View our <a href="privacy-policy.md" class="underline hover:text-slate-600 dark:hover:text-slate-300">Privacy Policy</a> and <a href="terms-of-service.md" class="underline hover:text-slate-600 dark:hover:text-slate-300">Terms of Service</a>.
     </p>
   </section>
 
@@ -395,16 +532,27 @@
     return {
       viewDate: new Date(),
       habits: ['Woke on time', 'Workout', 'Deep Work', 'Reading', 'No Junk Food', 'Slept on time'],
-      data: { grid: {}, weights: {}, customHabits: null },
+      data: { grid: {}, weights: {}, customHabits: null, habitColors: {} },
+      isDarkMode: false,
+      toasts: [],
 
       // Modal state
-      modal: { type: null, input: '', error: '', habitName: '', habitIndex: null },
+      modal: { type: null, input: '', error: '', habitName: '', habitIndex: null, color: 'blue' },
 
       // Memoisation cache — keyed by "YYYY-MM-DD-habitCount"
       _pctCache: {},
 
       // ─── INIT ───────────────────────────────────────
       init() {
+        // Init theme
+        const savedTheme = localStorage.getItem('allyTheme');
+        if (savedTheme) {
+          this.isDarkMode = savedTheme === 'dark';
+        } else {
+          this.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        this.applyTheme();
+
         const saved = localStorage.getItem('allyTrackerData');
         if (saved) {
           try {
@@ -412,6 +560,9 @@
             // Migrate legacy non-padded keys (e.g. "2026-3-5" → "2026-03-05")
             parsed.grid    = this._migrateKeys(parsed.grid    || {}, true);
             parsed.weights = this._migrateKeys(parsed.weights || {}, false);
+            if (!parsed.habitColors) {
+              parsed.habitColors = {};
+            }
             this.data = parsed;
             if (parsed.customHabits && parsed.customHabits.length) {
               this.habits = parsed.customHabits;
@@ -422,6 +573,32 @@
         }
         this.syncGrid();
         this._pctCache = {};
+      },
+
+      // Theme toggle helpers
+      toggleDarkMode() {
+        this.isDarkMode = !this.isDarkMode;
+        this.applyTheme();
+        this.showToast(this.isDarkMode ? 'Dark theme enabled' : 'Light theme enabled', 'info');
+      },
+
+      applyTheme() {
+        if (this.isDarkMode) {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('allyTheme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('allyTheme', 'light');
+        }
+      },
+
+      // Dynamic custom toast system
+      showToast(message, type = 'info') {
+        const id = Date.now() + Math.random();
+        this.toasts.push({ id, message, type });
+        setTimeout(() => {
+          this.toasts = this.toasts.filter(t => t.id !== id);
+        }, 4000);
       },
 
       // Migrate old "YYYY-M-D" keys to "YYYY-MM-DD"
@@ -452,11 +629,44 @@
       syncGrid() {
         if (!this.data.grid)    this.data.grid    = {};
         if (!this.data.weights) this.data.weights = {};
-        this.habits.forEach(h => {
+        if (!this.data.habitColors) this.data.habitColors = {};
+        
+        // Ensure default color assignments for pre-existing habits
+        const defaultPalette = ['blue', 'emerald', 'indigo', 'amber', 'rose'];
+        this.habits.forEach((h, idx) => {
           if (!this.data.grid[h]) this.data.grid[h] = {};
+          if (!this.data.habitColors[h]) {
+            this.data.habitColors[h] = defaultPalette[idx % defaultPalette.length];
+          }
         });
         this.data.customHabits = this.habits;
         this._pctCache = {};
+      },
+
+      getHabitColor(habit) {
+        return (this.data.habitColors && this.data.habitColors[habit]) || 'blue';
+      },
+
+      getHabitColorClass(habit) {
+        const color = this.getHabitColor(habit);
+        const themes = {
+          blue: {
+            accent: 'accent-blue-600 dark:accent-blue-400'
+          },
+          emerald: {
+            accent: 'accent-emerald-600 dark:accent-emerald-450'
+          },
+          indigo: {
+            accent: 'accent-indigo-600 dark:accent-indigo-400'
+          },
+          amber: {
+            accent: 'accent-amber-500 dark:accent-amber-400'
+          },
+          rose: {
+            accent: 'accent-rose-600 dark:accent-rose-500'
+          }
+        };
+        return themes[color] || themes.blue;
       },
 
       // ─── DATE HELPERS ───────────────────────────────
@@ -485,6 +695,42 @@
         return today.getDate()     === day &&
                today.getMonth()    === this.viewDate.getMonth() &&
                today.getFullYear() === this.viewDate.getFullYear();
+      },
+
+      isYesterday(day) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.getDate()     === day &&
+               yesterday.getMonth()    === this.viewDate.getMonth() &&
+               yesterday.getFullYear() === this.viewDate.getFullYear();
+      },
+
+      getDayDisplayClass(day) {
+        // Check if today or yesterday falls in the current viewDate month
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const hasTodayOrYesterdayInMonth = 
+          (today.getMonth() === this.viewDate.getMonth() && today.getFullYear() === this.viewDate.getFullYear()) ||
+          (yesterday.getMonth() === this.viewDate.getMonth() && yesterday.getFullYear() === this.viewDate.getFullYear());
+          
+        if (hasTodayOrYesterdayInMonth) {
+          // Show only yesterday and today on mobile portrait
+          if (this.isToday(day) || this.isYesterday(day)) {
+            return ''; // visible on mobile & desktop
+          } else {
+            return 'hidden landscape:table-cell md:table-cell'; // visible on landscape or desktop
+          }
+        } else {
+          // If viewing a different month, show the last two days of that month on mobile portrait
+          const totalDays = this.daysInMonth;
+          if (day === totalDays || day === totalDays - 1) {
+            return ''; // visible on mobile & desktop
+          } else {
+            return 'hidden landscape:table-cell md:table-cell'; // visible on landscape or desktop
+          }
+        }
       },
 
       // FIX: anchor to 1st to avoid month-end boundary bugs
@@ -518,6 +764,75 @@
           this.data.weights[key] = parsed;
         }
         this.save();
+      },
+
+      // ─── WEIGHT SPARKLINE CHART COMPUTATION ─────────
+      get weightTrend() {
+        const points = [];
+        let hasData = false;
+        
+        for (let d = 1; d <= this.daysInMonth; d++) {
+          const k = this.getDateKey(d);
+          if (this.data.weights && this.data.weights[k] !== undefined) {
+            points.push({ day: d, val: this.data.weights[k] });
+            hasData = true;
+          }
+        }
+
+        if (points.length === 0) {
+          return { hasData: false, latest: '--', min: '--', max: '--', path: '', fillPath: '', points: [] };
+        }
+
+        const values = points.map(p => p.val);
+        const latest = values[values.length - 1].toFixed(1);
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        
+        // Pad min/max slightly to make the sparkline sit nicely in the SVG viewport
+        const pad = (maxVal - minVal) * 0.1 || 1;
+        const scaleMin = minVal - pad;
+        const scaleMax = maxVal + pad;
+        const valRange = scaleMax - scaleMin;
+
+        // Map coordinates to SVG dimensions (160 x 40, margins 10 left/right, 5 top/bottom)
+        const svgWidth = 160;
+        const svgHeight = 40;
+        const marginX = 10;
+        const marginY = 5;
+        const plotW = svgWidth - 2 * marginX;
+        const plotH = svgHeight - 2 * marginY;
+
+        const coords = points.map((p, index) => {
+          // If only 1 point, center it
+          const x = points.length === 1 
+            ? svgWidth / 2 
+            : marginX + (index / (points.length - 1)) * plotW;
+          
+          const y = svgHeight - marginY - ((p.val - scaleMin) / valRange) * plotH;
+          return { x, y };
+        });
+
+        let path = '';
+        let fillPath = '';
+
+        if (coords.length >= 2) {
+          path = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
+          for (let i = 1; i < coords.length; i++) {
+            path += ` L ${coords[i].x.toFixed(1)} ${coords[i].y.toFixed(1)}`;
+          }
+          // For gradient fill path: trace down to the bottom and back to the start
+          fillPath = `${path} L ${coords[coords.length - 1].x.toFixed(1)} ${svgHeight} L ${coords[0].x.toFixed(1)} ${svgHeight} Z`;
+        }
+
+        return {
+          hasData: true,
+          latest,
+          min: minVal.toFixed(1),
+          max: maxVal.toFixed(1),
+          path,
+          fillPath,
+          points: coords
+        };
       },
 
       // ─── DAILY % (memoised) ─────────────────────────
@@ -616,20 +931,20 @@
 
       // ─── MODAL MANAGEMENT ───────────────────────────
       openAddHabitModal() {
-        this.modal = { type: 'addHabit', input: '', error: '', habitName: '', habitIndex: null };
+        this.modal = { type: 'addHabit', input: '', error: '', habitName: '', habitIndex: null, color: 'blue' };
         this.$nextTick(() => this.$refs.habitInput && this.$refs.habitInput.focus());
       },
 
       openDeleteModal(index) {
-        this.modal = { type: 'deleteHabit', input: '', error: '', habitName: this.habits[index], habitIndex: index };
+        this.modal = { type: 'deleteHabit', input: '', error: '', habitName: this.habits[index], habitIndex: index, color: 'blue' };
       },
 
       openResetModal() {
-        this.modal = { type: 'reset', input: '', error: '', habitName: '', habitIndex: null };
+        this.modal = { type: 'reset', input: '', error: '', habitName: '', habitIndex: null, color: 'blue' };
       },
 
       closeModal() {
-        this.modal = { type: null, input: '', error: '', habitName: '', habitIndex: null };
+        this.modal = { type: null, input: '', error: '', habitName: '', habitIndex: null, color: 'blue' };
       },
 
       confirmModal() {
@@ -637,23 +952,32 @@
           const name = this.modal.input.trim();
           if (!name) { this.modal.error = 'Please enter a habit name.'; return; }
           if (this.habits.includes(name)) { this.modal.error = 'A habit with this name already exists.'; return; }
+          
           this.habits.push(name);
+          if (!this.data.habitColors) this.data.habitColors = {};
+          this.data.habitColors[name] = this.modal.color;
           this.syncGrid();
           this.save();
           this.closeModal();
+          this.showToast(`Habit "${name}" added successfully!`, 'success');
 
         } else if (this.modal.type === 'deleteHabit') {
           const habit = this.habits[this.modal.habitIndex];
           if (habit) {
             delete this.data.grid[habit];
+            if (this.data.habitColors) {
+              delete this.data.habitColors[habit];
+            }
             this.habits.splice(this.modal.habitIndex, 1);
             this.syncGrid();
             this.save();
+            this.showToast(`Habit "${habit}" was deleted.`, 'warning');
           }
           this.closeModal();
 
         } else if (this.modal.type === 'reset') {
           localStorage.removeItem('allyTrackerData');
+          localStorage.removeItem('allyTheme');
           location.reload();
         }
       },
@@ -673,6 +997,7 @@
         a.download = `habit_ally_backup_${y}-${m}.json`;
         a.click();
         URL.revokeObjectURL(a.href);
+        this.showToast('Data backup JSON downloaded.', 'success');
       },
 
       importData(event) {
@@ -684,14 +1009,18 @@
             const imported = JSON.parse(e.target.result);
             imported.grid    = this._migrateKeys(imported.grid    || {}, true);
             imported.weights = this._migrateKeys(imported.weights || {}, false);
+            if (!imported.habitColors) {
+              imported.habitColors = {};
+            }
             this.data = imported;
             if (imported.customHabits && imported.customHabits.length) {
               this.habits = imported.customHabits;
             }
             this.syncGrid();
             this.save();
+            this.showToast('Data imported successfully!', 'success');
           } catch(err) {
-            alert('Invalid file. Please import a valid Habit Ally JSON backup.');
+            this.showToast('Invalid file format. Import failed.', 'error');
           }
         };
         reader.readAsText(file);
